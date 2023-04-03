@@ -78,55 +78,6 @@ class VQS:
     #     qml.ctrl(qml.PauliZ(1), (0, num_of_qubits-1)) # CZ struct2
         qml.Toffoli(wires=(0, num_of_qubits-1, 1))  # CCNOT struct3
 
-    def test(self):
-        for num_of_qubits in [10, 11]:   # 10 or 11 for the test below
-            print('num_of_qubits=', num_of_qubits)
-            dev_with_HT = qml.device(device_name, wires=num_of_qubits)
-
-            @qml.qnode(dev_with_HT)
-            def quantum_circuit_test3(theta):
-                qubit_posi = list(range(math.floor(len(theta)/2)))
-                self.layer_t3_no_HT(theta, qubit_posi)
-                # length of theta: (num_of_qubits-1)*2
-                # number of wires: num_of_qubits
-                return qml.expval(qml.PauliZ(0))
-
-            dev_with_HT = qml.device(device_name, wires=num_of_qubits)
-
-            @qml.qnode(dev_with_HT)
-            def quantum_circuit_test4(theta):
-                qubit_posi = list(range(math.floor(len(theta)/2)))
-                self.layer_t3_with_HT(theta, num_of_qubits)
-                # length of theta: (num_of_qubits-1)*2
-                # number of wires: num_of_qubits
-                return qml.expval(qml.PauliZ(0))
-
-            if num_of_qubits == 10:
-                theta = [1, 2, 3, 4, 5, 6, 7, 8, 9,  1.1,
-                         2.1, 3.1, 4.1, 5.1, 6.1, 7.1, 8.1, 9.1]
-                test1_val = quantum_circuit_test3(theta)
-                print(qml.draw(quantum_circuit_test3)(theta))
-                print('test3_val=', test1_val)
-
-                theta = [1, 2, 3, 4, 5, 6, 7, 8, 9,  1.1,
-                         2.1, 3.1, 4.1, 5.1, 6.1, 7.1, 8.1, 9.1]
-                test1_val = quantum_circuit_test4(theta)
-                print(qml.draw(quantum_circuit_test4)(theta))
-                print('test4_val=', test1_val)
-
-            if num_of_qubits == 11:
-                theta = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,  1.1,
-                         2.1, 3.1, 4.1, 5.1, 6.1, 7.1, 8.1, 9.1, 10.1]
-                test1_val = quantum_circuit_test3(theta)
-                print(qml.draw(quantum_circuit_test3)(theta))
-                print('test3_val=', test1_val)
-
-                theta = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,  1.1,
-                         2.1, 3.1, 4.1, 5.1, 6.1, 7.1, 8.1, 9.1, 10.1]
-                test1_val = quantum_circuit_test4(theta)
-                print(qml.draw(quantum_circuit_test4)(theta))
-                print('test4_val=', test1_val)
-
     def quantum_circuit_with_HT(self, theta):
         @qml.qnode(self.dev_with_HT)
         def _quantum_circuit_with_HT(theta):
