@@ -19,28 +19,26 @@ print('sss')
 
 
 class VQS:
-    def __init__(self, num_of_qubits, oracle=None):
-        self.oracle = oracle
-
+    def __init__(self, num_of_qubits):
+        self.num_of_qubits = 1+num_of_qubits
         self.device_name = 'default.qubit'  # 'default.qubit'
         self.device_name2 = 'default.qubit'  # has qml.state()
         self.val_global = []
-        n = 2**(num_of_qubits-2)
+        n = 2**(self.num_of_qubits-2)
         self.normal_val = math.sqrt(1/n)
 
-        self.num_of_qubits = 1+num_of_qubits
-        self.eps_val_q = 1/math.sqrt(2**num_of_qubits)/100
+        self.eps_val_q = 1/math.sqrt(2**self.num_of_qubits)/100
         self.eps_val = min(1e-10, self.eps_val_q)
         self.tiny_change_threshold = 1e-4
         self.cnt_threshold_no_change = 5
         # self.dev_with_HT=qml.device(device_name2, wires=num_of_qubits+1) #AerDevice(wires=num_of_qubits, shots=20000, backend='qasm_simulator')
-        self.dev_with_HT = qml.device(device_name, wires=num_of_qubits)
+        self.dev_with_HT = qml.device(device_name, wires=self.num_of_qubits)
         # self.dev_with_HTZ=qml.device(device_name2, wires=num_of_qubits+1) #AerDevice(wires=num_of_qubits, shots=20000, backend='qasm_simulator')
-        self.dev_with_HTZ = qml.device(device_name, wires=num_of_qubits)
+        self.dev_with_HTZ = qml.device(device_name, wires=self.num_of_qubits)
         # dev_no_HT_Z=qml.device(device_name2, wires=num_of_qubits+1) #AerDevice(wires=num_of_qubits-1, shots=20000, backend='qasm_simulator')
-        self.dev_no_HT_Z = qml.device(device_name, wires=num_of_qubits-1)
+        self.dev_no_HT_Z = qml.device(device_name, wires=self.num_of_qubits-1)
         # dev_no_HT_S=qml.device(device_name2, wires=num_of_qubits+1) #AerDevice(wires=num_of_qubits-1, backend='qasm_simulator')
-        self.dev_no_HT_S = qml.device(device_name2, wires=num_of_qubits-1)
+        self.dev_no_HT_S = qml.device(device_name2, wires=self.num_of_qubits-1)
 
     def layer_t3_no_HT(self, theta, qubit_posi):
         # type-2 layer
@@ -85,7 +83,6 @@ class VQS:
             # qml.QubitStateVector(np.array(initial_state_0_phi1),wires=range(self.num_of_qubits))  # Need
             qml.Hadamard(0)
             for theta_i in theta:
-                print(theta_i)
                 self.layer_t3_with_HT(theta_i, self.num_of_qubits)
             qml.Hadamard(0)
             return qml.expval(qml.PauliZ(0))
@@ -106,8 +103,8 @@ class VQS:
             qml.Hadamard(0)
             return qml.expval(qml.PauliZ(0))
         # print('newly added')
-        # print(qml.draw(_quantum_circuit_with_HTZ)
-        #       ([[0.1]*2*(self.num_of_qubits-1)]))
+        print(qml.draw(_quantum_circuit_with_HTZ)
+              ([[0.1]*2*(self.num_of_qubits-1)]))
         return _quantum_circuit_with_HTZ(theta)
 
     def quantum_circuit_no_HT_return_Z(self, theta):
@@ -148,6 +145,16 @@ class VQS:
             [val1_1._value.tolist(), val1_2._value.tolist(), obj._value.tolist()])
         return obj
 
+    # def print_circuits(self):
+    #     qml.draw(self.quantum_circuit_with_HT)(
+    #         [[0.1]*2*(self.num_of_qubits-1)])
+    #     print('newly added')
+    #     print(qml.draw(self.quantum_circuit_with_HTZ)
+    #           ([[0.1]*2*(self.num_of_qubits-1)]))
+    #     print('newly added 2')
+    #     print(qml.draw(self.quantum_circuit_no_HT_return_Z)
+    #           ([[0.2]*2*(self.num_of_qubits-1)]))
+
     def run(self, coef2=1, max_repeat=1, iter_max=300, num_of_layers=3, print_flag=True):
         coef2 = coef2
         max_repeat = max_repeat
@@ -176,11 +183,11 @@ class VQS:
             iter_terminate = iter_max
             for iter in range(1, iter_max+1):
                 theta, obj = optimizer.step_and_cost(self.objective_fn, theta)
-                val1_1 = val_global[-1][0]
-                val1_2 = val_global[-1][1]
+                val1_1 = self.val_global[-1][0]
+                val1_2 = self.val_global[-1][1]
                 if iter >= 2:
-                    val1_1_old = val_global[-2][0]
-                    val1_2_old = val_global[-2][1]
+                    val1_1_old = self.val_global[-2][0]
+                    val1_2_old = self.val_global[-2][1]
                 else:
                     val1_1_old = 999
                     val1_2_old = 999
@@ -206,7 +213,7 @@ class VQS:
             theta_list.append(theta)
             obj_list_rep.append(obj_list)
 
-            val_global = []  # reset to empty
+            self.val_global = []  # reset to empty
 
             # display the amplified state
             state = self.quantum_circuit_no_HT_return_state(theta)
@@ -224,4 +231,6 @@ class VQS:
 
 vqs = VQS(num_of_qubits=4)
 
-print(vqs.run())
+# print(vqs.print_circuits())
+res = vqs.run()
+print(res)
