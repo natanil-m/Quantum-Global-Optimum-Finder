@@ -266,3 +266,14 @@ class VQS_GF:
             if(np.linalg.norm(last_prbs[i]) > 0.01):
                 results.append((i, last_prbs[i]))
         return results
+
+
+init_state = [0.31268663, 0.24072539, 0, 0.17053426, 0.33511663, 0.21917375, 0.07836035,
+              0.36608647, 0.40977557, 0, 0.08265279, 0.41639085, 0.10071337, 0.01130362, 0, 0.39534377]
+num_qubits = 6
+num_overflow_bit = 2
+shift = 8
+vqs = VQS_GF(init_state=init_state, num_of_qubits=num_qubits,
+             num_overflow_bit=num_overflow_bit, shift=shift)
+res = vqs.run()
+print(res)
