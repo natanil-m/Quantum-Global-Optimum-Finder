@@ -15,17 +15,17 @@ import datetime
 
 device_name = 'default.qubit'  # 'default.qubit' #
 device_name2 = 'default.qubit'  # has qml.state()
-print('sss')
 
 
 class VQS:
-    def __init__(self, num_of_qubits):
+    def __init__(self, num_of_qubits, oracle):
         self.num_of_qubits = 1+num_of_qubits
         self.device_name = 'default.qubit'  # 'default.qubit'
         self.device_name2 = 'default.qubit'  # has qml.state()
         self.val_global = []
         n = 2**(self.num_of_qubits-2)
         self.normal_val = math.sqrt(1/n)
+        self.oracle = oracle
 
         self.eps_val_q = 1/math.sqrt(2**self.num_of_qubits)/100
         self.eps_val = min(1e-10, self.eps_val_q)
@@ -81,6 +81,7 @@ class VQS:
         def _quantum_circuit_with_HT(theta):
             # initiate state vector |phi_1>
             # qml.QubitStateVector(np.array(initial_state_0_phi1),wires=range(self.num_of_qubits))  # Need
+            self.oracle(qml, first_qubit=1)
             qml.Hadamard(0)
             for theta_i in theta:
                 self.layer_t3_with_HT(theta_i, self.num_of_qubits)
@@ -96,6 +97,7 @@ class VQS:
             # initiate state vector |phi_1>
             # qml.QubitStateVector(np.array(initial_state_0_phi1), #Need
             #                     wires=range(num_of_qubits))
+            self.oracle(qml, first_qubit=1)
             qml.Hadamard(0)
             for theta_i in theta:
                 self.layer_t3_with_HT(theta_i, self.num_of_qubits)
@@ -113,6 +115,7 @@ class VQS:
             # initiate state vector |phi_1>
             # qml.QubitStateVector(np.array(self.initial_state_phi1),  #Need
             #                     wires=range(self.num_of_qubits-1))
+            self.oracle(qml, first_qubit=0)
             for theta_i in theta:
                 self.layer_t3_no_HT(theta_i, list(range(self.num_of_qubits-1)))
             return qml.expval(qml.PauliZ(0))
@@ -125,8 +128,9 @@ class VQS:
         @qml.qnode(self.dev_no_HT_S)
         def _quantum_circuit_no_HT_return_state(theta):
             # initiate state vector |phi_1>
-            # qml.QubitStateVector(np.array(initial_state_phi1),  #theta
+            # qml.QubitStateVector(np.array(initial_state_phi1),  #theta  #Need
             #                     wires=range(num_of_qubits-1))
+            self.oracle(qml, first_qubit=0)
             for theta_i in theta:
                 self.layer_t3_no_HT(theta_i, list(range(self.num_of_qubits-1)))
             return qml.state()
@@ -167,7 +171,7 @@ class VQS:
         print_flag = print_flag
 
         last_prbs = []  # added
-        print('start')
+        print('start vqs ...')
         for rep in range(1, max_repeat+1):
             if print_flag:
                 print(f'\n\nrep={rep}')
@@ -231,6 +235,6 @@ class VQS:
 
 vqs = VQS(num_of_qubits=4)
 
-# print(vqs.print_circuits())
+
 res = vqs.run()
 print(res)
