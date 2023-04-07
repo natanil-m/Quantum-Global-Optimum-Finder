@@ -21,14 +21,13 @@ class VQS_GF:
     def __init__(self, init_state, num_of_qubits, num_overflow_bit, shift):
         self.init_state = init_state
         self.shift = shift
-        self.num_overflow = num_overflow_bit
+        self.num_overflow_bit = num_overflow_bit
         self.num_of_qubits = 1+num_of_qubits
         self.device_name = 'default.qubit'  # 'default.qubit'
         self.device_name2 = 'default.qubit'  # has qml.state()
         self.val_global = []
         n = 2**(self.num_of_qubits-2)
         self.normal_val = math.sqrt(1/n)
-
 
         self.eps_val_q = 1/math.sqrt(2**self.num_of_qubits)/100
         self.eps_val = min(1e-10, self.eps_val_q)
@@ -43,7 +42,7 @@ class VQS_GF:
         # dev_no_HT_S=qml.device(device_name2, wires=num_of_qubits+1) #AerDevice(wires=num_of_qubits-1, backend='qasm_simulator')
         self.dev_no_HT_S = qml.device(device_name2, wires=self.num_of_qubits-1)
 
-    def add_k_sign(k, wires):
+    def add_k_sign(self, k, wires):
         # sign handling
         bin_rep = np.binary_repr(k, len(wires))
         k = int(bin_rep, 2)
@@ -52,6 +51,22 @@ class VQS_GF:
         for j in range(len(wires)):
             qml.RZ(k * np.pi / (2**j), wires=wires[j])
         qml.adjoint(qml.QFT)(wires=wires)
+
+    def oracle_builder_for_HT_HTZ(self):
+        qml.QubitStateVector(np.array(self.init_state), wires=range(
+            1+self.num_overflow_bit, self.num_of_qubits))
+        # add some bits for handle overflow
+        for w in reversed(range(2, self.num_overflow_bit+2)):
+            qml.CNOT([w, w-1])
+        self.add_k_sign(self.shift, wires=range(1, self.num_of_qubits))
+
+    def oracle_builder_for_no_HT_HTZ(self):
+        qml.QubitStateVector(np.array(self.init_state), wires=range(
+            self.num_overflow_bit, self.num_of_qubits-1))
+        # add some bits for handle overflow
+        for w in reversed(range(1, self.num_overflow_bit+2)):
+            qml.CNOT([w, w-1])
+        self.add_k_sign(self.shift, wires=range(0, self.num_of_qubits-1))
 
     def layer_t3_no_HT(self, theta, qubit_posi):
         # type-2 layer
@@ -89,22 +104,6 @@ class VQS_GF:
     #     qml.ctrl(qml.PauliZ(1), (0, num_of_qubits-1)) # CZ struct2
         qml.Toffoli(wires=(0, num_of_qubits-1, 1))  # CCNOT struct3
 
-    def oracle_builder_for_HT_HTZ(self):
-        qml.QubitStateVector(np.array(self.init_state), wires=range(
-            1+self.num_overflow, self.num_of_qubits))
-        # add some bits for handle overflow
-        for w in reversed(range(2, self.num_overflow_bit+1)):
-            qml.CNOT([w, w-1])
-        self.add_k_sign(self.shift, wires=range(1, self.num_of_qubits))
-
-    def oracle_builder_for_no_HT_HTZ(self):
-        qml.QubitStateVector(np.array(self.init_state), wires=range(
-            self.num_overflow, self.num_of_qubits-1))
-        # add some bits for handle overflow
-        for w in reversed(range(1, self.num_overflow_bit+1)):
-            qml.CNOT([w, w-1])
-        self.add_k_sign(self.shift, wires=range(1, self.num_of_qubits-1))
-
     def quantum_circuit_with_HT(self, theta):
         @qml.qnode(self.dev_with_HT)
         def _quantum_circuit_with_HT(theta):
@@ -137,8 +136,8 @@ class VQS_GF:
             qml.Hadamard(0)
             return qml.expval(qml.PauliZ(0))
         # print('newly added')
-        print(qml.draw(_quantum_circuit_with_HTZ)
-              ([[0.1]*2*(self.num_of_qubits-1)]))
+        # print(qml.draw(_quantum_circuit_with_HTZ)
+        #       ([[0.1]*2*(self.num_of_qubits-1)]))
         return _quantum_circuit_with_HTZ(theta)
 
     def quantum_circuit_no_HT_return_Z(self, theta):
@@ -147,10 +146,9 @@ class VQS_GF:
             # initiate state vector |phi_1>
             # qml.QubitStateVector(np.array(self.initial_state_phi1),  #Need
             #                     wires=range(self.num_of_qubits-1))
-            
+
             self.oracle_builder_for_no_HT_HTZ()
-            
-            
+
             for theta_i in theta:
                 self.layer_t3_no_HT(theta_i, list(range(self.num_of_qubits-1)))
             return qml.expval(qml.PauliZ(0))
@@ -165,9 +163,9 @@ class VQS_GF:
             # initiate state vector |phi_1>
             # qml.QubitStateVector(np.array(initial_state_phi1),  #theta  #Need
             #                     wires=range(num_of_qubits-1))
-            
+
             self.oracle_builder_for_no_HT_HTZ()
-            
+
             for theta_i in theta:
                 self.layer_t3_no_HT(theta_i, list(range(self.num_of_qubits-1)))
             return qml.state()
@@ -268,6 +266,3 @@ class VQS_GF:
             if(np.linalg.norm(last_prbs[i]) > 0.01):
                 results.append((i, last_prbs[i]))
         return results
-
-
-
