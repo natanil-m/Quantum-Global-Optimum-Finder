@@ -7,7 +7,7 @@
 #SBATCH --partition=gpuA100x8     # or one of: gpuA100x4 gpuA40x4 gpuA100x8 gpuMI100x8
 #SBATCH --account=bbpj-delta-gpu #msoltaninia
 #SBATCH --job-name=myjobtest
-#SBATCH --time=00:10:00      # hh:mm:ss for the job
+#SBATCH --time=01:00:00      # hh:mm:ss for the job
 ### GPU options ###
 ##SBATCH --gpus-per-node=1
 ##SBATCH --gpu-bind=none     # or closest
@@ -32,5 +32,5 @@ source activate global_finder310
 # conda clean --all
 # conda install -c anaconda cudatoolkit
 # pip install pennylane[torch,cirq,qiskit]
-srun python3 builder_min_max.py
+srun python3 builder_min_max.py 14 5
 echo "done"

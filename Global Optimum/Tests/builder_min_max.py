@@ -15,8 +15,9 @@ from pennylane.optimize import AdamOptimizer
 import sys
 
 
-seed = 5
-N_test = 5
+
+seed = int(sys.argv[1])
+N_test = int(sys.argv[2])
 
 
 # In[2]:
@@ -36,11 +37,13 @@ def random_oracle_builder(num_qubits):
 
     # Generate indices for the zero elements
     num_zeros = np.random.randint(int(size/8), size)
-    zero_indices = np.random.choice(size, num_zeros, replace=False)
+    # zero_indices = np.random.choice(size, num_zeros, replace=False)
 
     # Set the elements at the zero indices to zero
-    rand_vec[zero_indices] = 0
-
+    # rand_vec[zero_indices] = 0
+    
+    rand_vec[rand_vec < 1/size] = 0
+    
     # invalid_state = '1'+(num_qubits-1)*'0'
 
     # invalid_state_index = 2**(num_qubits-1)
@@ -102,6 +105,7 @@ print(start_state)
 
 
 # print params
+print("==================================================")
 print('seed ', seed)
 print('N_test ', N_test)
 print('num_overflow_bit ', num_overflow_bit)
@@ -287,8 +291,8 @@ i_max_previous = i_max
 while k_binary_global_search_max == None:
     exp_val = global_search(-i_max, k_helper, start_state,
                             dev_global_search.wires)
-    print(i_max)
-    print(exp_val)
+    #print(i_max)
+    #print(exp_val)
     if(exp_val < threshold_max):
         if(exp_val < threshold_max_backtrack):
             k_binary_global_search_max = -i_max_previous
