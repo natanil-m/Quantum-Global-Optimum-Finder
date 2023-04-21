@@ -7,7 +7,7 @@ Currently Loaded Modules:
 
  
 
-job is starting on gpuc03.delta.ncsa.illinois.edu
-slurmstepd: error: *** STEP 1717082.0 ON gpuc03 CANCELLED AT 2023-04-21T08:57:39 DUE TO TIME LIMIT ***
-slurmstepd: error: *** JOB 1717082 ON gpuc03 CANCELLED AT 2023-04-21T08:57:39 DUE TO TIME LIMIT ***
+job is starting on gpuc05.delta.ncsa.illinois.edu
+slurmstepd: error: *** STEP 1717122.0 ON gpuc05 CANCELLED AT 2023-04-21T08:35:56 ***
 srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+slurmstepd: error: *** JOB 1717122 ON gpuc05 CANCELLED AT 2023-04-21T08:35:56 ***
