@@ -6,7 +6,7 @@
 #SBATCH --gpus-per-task=1    # match to OMP_NUM_THREADS
 #SBATCH --partition=gpuA100x8     # or one of: gpuA100x4 gpuA40x4 gpuA100x8 gpuMI100x8
 #SBATCH --account=bbpj-delta-gpu #msoltaninia
-#SBATCH --job-name=myjobtest
+#SBATCH --job-name=J-$1-$2  # change job name to include the two arguments
 #SBATCH --time=01:00:00      # hh:mm:ss for the job
 ### GPU options ###
 ##SBATCH --gpus-per-node=1
@@ -21,16 +21,6 @@ module load anaconda3_gpu  # ... or any appropriate modules
 module list  # job documentation and metadata
 echo "job is starting on `hostname`"
 source activate global_finder310
-# pip install kahypar
-# pip install scipy
-# pip install pennylane-sparse
-# conda install -c conda-forge cuquantum-python
-# conda install -c "conda-forge/label/broken" cuquantum-python
-# pip install pennylane-lightning[gpu]
 
-# conda remove -c anaconda cudatoolkit -y
-# conda clean --all
-# conda install -c anaconda cudatoolkit
-# pip install pennylane[torch,cirq,qiskit]
-srun python3 builder_min_max.py 14 5
+srun python3 builder_min_max.py $1 $2
 echo "done"

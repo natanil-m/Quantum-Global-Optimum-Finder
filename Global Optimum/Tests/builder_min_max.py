@@ -37,10 +37,10 @@ def random_oracle_builder(num_qubits):
 
     # Generate indices for the zero elements
     num_zeros = np.random.randint(int(size/8), size)
-    # zero_indices = np.random.choice(size, num_zeros, replace=False)
+    zero_indices = np.random.choice(size, num_zeros, replace=False)
 
     # Set the elements at the zero indices to zero
-    # rand_vec[zero_indices] = 0
+    rand_vec[zero_indices] = 0
     
     rand_vec[rand_vec < 1/size] = 0
     

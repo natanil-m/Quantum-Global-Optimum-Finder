@@ -1,0 +1,18 @@
+Running "module reset". Resetting modules to system default. The following $MODULEPATH directories have been removed: None
+
+Currently Loaded Modules:
+  1) cue-login-env/1.0   4) openmpi/4.1.2   7) default
+  2) gcc/11.2.0          5) cuda/11.6.1     8) cudnn/8.4.1.50
+  3) ucx/1.11.2          6) modtree/gpu     9) anaconda3_gpu/4.13.0
+
+ 
+
+job is starting on gpuc05.delta.ncsa.illinois.edu
+Traceback (most recent call last):
+  File "/u/msoltaninia/Global_Finder/Quantum-Global-Optimum-Finder/Global Optimum/Tests/builder_min_max.py", line 93, in <module>
+    test_input = random_oracle_builder(num_qubits=N_test)
+  File "/u/msoltaninia/Global_Finder/Quantum-Global-Optimum-Finder/Global Optimum/Tests/builder_min_max.py", line 43, in random_oracle_builder
+    rand_vec[zero_indices] = 0
+NameError: name 'zero_indices' is not defined
+srun: error: gpuc05: task 0: Exited with exit code 1
+done
