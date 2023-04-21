@@ -4,13 +4,15 @@
 # In[1]:
 
 
+import datetime
+from pennylane import numpy as qml_np
+import numpy as np
 import pennylane as qml
 from pennylane import numpy as np
 import matplotlib.pyplot as plt
 import math
 from pennylane.optimize import AdamOptimizer
 import sys
-
 
 
 seed = 5
@@ -22,7 +24,7 @@ N_test = 5
 
 # np.random.seed(28)
 # np.random.seed(32)
-np.random.seed(5)
+np.random.seed(seed)
 
 
 # In[3]:
@@ -33,19 +35,19 @@ def random_oracle_builder(num_qubits):
     rand_vec = np.random.rand(size)
 
     # Generate indices for the zero elements
-    num_zeros = np.random.randint(int(size/8),size)
+    num_zeros = np.random.randint(int(size/8), size)
     zero_indices = np.random.choice(size, num_zeros, replace=False)
 
     # Set the elements at the zero indices to zero
     rand_vec[zero_indices] = 0
-    
+
     # invalid_state = '1'+(num_qubits-1)*'0'
-    
+
     # invalid_state_index = 2**(num_qubits-1)
     # if(rand_vec[invalid_state_index]>0.00001):
     #     print('Oracle has invalid state -0')
     # rand_vec[invalid_state_index]=0
-    
+
     rand_vec = rand_vec/np.linalg.norm(rand_vec)
     return rand_vec
 
@@ -55,32 +57,31 @@ def random_oracle_builder(num_qubits):
 # In[4]:
 
 
-#Global Control Variables
+# Global Control Variables
 k_helper = None
 k_full_global_search_max = None
 k_full_global_search_min = None
 k_binary_global_search_max = None
 k_binary_global_search_min = None
 
-#Thresholds 
+# Thresholds
 threshold_helper_u = 0.25
 threshold_helper_l = -0.25
 threshold_max = -0.75
 threshold_min = 0.75
 threshold_min_backtrack = -0.98
 threshold_max_backtrack = 0.98
-vqs_find_sucess = 0.016 #TODO
+vqs_find_sucess = 0.016  # TODO
 
-#Rates
+# Rates
 # global_search_rate_max = 2
 # global_search_rate_min = 2
 
 
-
-#Devices
+# Devices
 device_name_standard_maker = 'default.qubit'
-device_global_search = 'default.qubit' 
-n_shots=None
+device_global_search = 'default.qubit'
+n_shots = None
 
 # test_input = [0.6, 0.3, 0.0, 0.1, 0.5, 0.0,0.0,0.5,0.5,0.0,0.2,0,0.0,0.1, 0.8, 0.0]
 # test_input = np.array(test_input)
@@ -100,20 +101,19 @@ start_state = test_input
 print(start_state)
 
 
-#print params
-print('seed ',seed)
-print('N_test ',N_test)
-print('num_overflow_bit ',num_overflow_bit)
-print('threshold_helper_u ',threshold_helper_u)
-print('threshold_helper_l ',threshold_helper_l)
-print('device_name_standard_maker ',device_name_standard_maker)
-print('device_global_search',device_global_search)
-print('threshold_max ',threshold_max)
-print('threshold_min ',threshold_min)
-print('threshold_min_backtrack ',threshold_min_backtrack)
-print('threshold_max_backtrack ',threshold_max_backtrack)
-print('vqs_find_sucess ',vqs_find_sucess)
-
+# print params
+print('seed ', seed)
+print('N_test ', N_test)
+print('num_overflow_bit ', num_overflow_bit)
+print('threshold_helper_u ', threshold_helper_u)
+print('threshold_helper_l ', threshold_helper_l)
+print('device_name_standard_maker ', device_name_standard_maker)
+print('device_global_search', device_global_search)
+print('threshold_max ', threshold_max)
+print('threshold_min ', threshold_min)
+print('threshold_min_backtrack ', threshold_min_backtrack)
+print('threshold_max_backtrack ', threshold_max_backtrack)
+print('vqs_find_sucess ', vqs_find_sucess)
 
 
 # In[5]:
@@ -125,17 +125,17 @@ cls_min_val = 2**num_of_qubits_test
 
 
 for x in range(len(test_input)):
-    bin_rep = np.binary_repr(x,num_of_qubits_test)
+    bin_rep = np.binary_repr(x, num_of_qubits_test)
     #print(bin_rep,': ',test_input[x])
-    if(np.isclose(test_input[x],0)):
+    if(np.isclose(test_input[x], 0)):
         continue
 
-    if(bin_rep[0]=='1'):
-        x=int(bin_rep,2)-(1<<num_of_qubits_test)
-    if(x<cls_min_val):
-        cls_min_val=x
-    if(x>cls_max_val):
-        cls_max_val=x
+    if(bin_rep[0] == '1'):
+        x = int(bin_rep, 2)-(1 << num_of_qubits_test)
+    if(x < cls_min_val):
+        cls_min_val = x
+    if(x > cls_max_val):
+        cls_max_val = x
 
 print(cls_max_val)
 print(cls_min_val)
@@ -145,9 +145,9 @@ print(cls_min_val)
 
 
 def add_k_sign(k, wires):
-    #sign handling
-    bin_rep = np.binary_repr(k,len(wires))
-    k = int(bin_rep,2)
+    # sign handling
+    bin_rep = np.binary_repr(k, len(wires))
+    k = int(bin_rep, 2)
 
     qml.QFT(wires=wires)
     for j in range(len(wires)):
@@ -158,30 +158,32 @@ def add_k_sign(k, wires):
 # In[7]:
 
 
-dev_standard_maker = qml.device(device_name_standard_maker, wires=num_qubits,shots=n_shots) 
+dev_standard_maker = qml.device(
+    device_name_standard_maker, wires=num_qubits, shots=n_shots)
+
+
 @qml.qnode(dev_standard_maker)
-def standard_maker_helper_circuit(k,input,wires):
+def standard_maker_helper_circuit(k, input, wires):
     qml.QubitStateVector(np.array(input), wires=wires[num_overflow_bit:])
-     # add some bits for handle overflow
-    for w in reversed(range(1,num_overflow_bit+1)):
-        qml.CNOT([w,w-1])
-    add_k_sign(k,wires=wires)
+    # add some bits for handle overflow
+    for w in reversed(range(1, num_overflow_bit+1)):
+        qml.CNOT([w, w-1])
+    add_k_sign(k, wires=wires)
     return qml.expval(qml.PauliZ(wires=0))
 
 
 #qml.draw_mpl(standard_maker_helper_circuit, show_all_wires=True)(0,start_state,dev_standard_maker.wires)
-#plt.show()
+# plt.show()
 
 
 # In[8]:
-
 
 
 # # x=[i for i in range(-2**(num_qubits-1-1),2**(num_qubits-1-1)+1)]
 # x=[i for i in range(-(2**(num_of_qubits_test-1)),2**(num_of_qubits_test-1)+1)]
 # y=[]
 # for i in x:
-#     exp_val = standard_maker_helper_circuit(i,start_state,dev_standard_maker.wires) 
+#     exp_val = standard_maker_helper_circuit(i,start_state,dev_standard_maker.wires)
 #     # print(i)
 #     # print(exp_val)
 #     if(threshold_helper_l<exp_val<threshold_helper_u):
@@ -192,7 +194,7 @@ def standard_maker_helper_circuit(k,input,wires):
 
 # # plot scatter plot with x and y data
 # plt.scatter(x, y)
-  
+
 # # plot with x and y data
 # plt.plot(x, y)
 
@@ -204,44 +206,46 @@ def standard_maker_helper_circuit(k,input,wires):
 
 # In[9]:
 
-
 k_helper_binary = None
 size = 2**(num_qubits-num_overflow_bit-1)+1
 
-temp_k=0
-max_iteration = 2*math.log(size) # 2* ? for seed=40 max_iteration+2 works
+temp_k = 0
+max_iteration = 2*math.log(size)  # 2* ? for seed=40 max_iteration+2 works
 iteration = 0
 while k_helper_binary == None and iteration <= max_iteration+1:
-    exp_val = standard_maker_helper_circuit(temp_k,start_state,dev_standard_maker.wires)
-    if(exp_val>threshold_helper_l and exp_val<threshold_helper_u):
+    exp_val = standard_maker_helper_circuit(
+        temp_k, start_state, dev_standard_maker.wires)
+    if(exp_val > threshold_helper_l and exp_val < threshold_helper_u):
         k_helper_binary = temp_k
     else:
-        if(exp_val>0):
-             temp_k -= int((size-abs(temp_k))/2)-1
+        if(exp_val > 0):
+            temp_k -= int((size-abs(temp_k))/2)-1
         else:
             temp_k += int((size-abs(temp_k))/2)+1
-    iteration+=1
+    iteration += 1
 k_helper = k_helper_binary
 
 print(k_helper)
 
-if(k_helper==None):
-        raise UserWarning('F(x) is near constant. Measure it to find the global optimum !')
-
-            
+if(k_helper == None):
+    raise UserWarning(
+        'F(x) is near constant. Measure it to find the global optimum !')
 
 
 # In[ ]:
 
 
-dev_global_search = qml.device(device_global_search, wires=num_qubits,shots=n_shots) 
+dev_global_search = qml.device(
+    device_global_search, wires=num_qubits, shots=n_shots)
+
+
 @qml.qnode(dev_global_search)
-def global_search(k_new,k_helper,input,wires):
+def global_search(k_new, k_helper, input, wires):
     qml.QubitStateVector(np.array(input), wires=wires[num_overflow_bit:])
     # add some bits for handle overflow
-    for w in reversed(range(1,num_overflow_bit+1)):
-        qml.CNOT([w,w-1])     
-    add_k_sign(k_helper+k_new,wires=wires)
+    for w in reversed(range(1, num_overflow_bit+1)):
+        qml.CNOT([w, w-1])
+    add_k_sign(k_helper+k_new, wires=wires)
     return qml.expval(qml.PauliZ(wires=0))
 
 
@@ -251,23 +255,23 @@ def global_search(k_new,k_helper,input,wires):
 def classical_vqs_result_optimal_finder(vqs_res):
     min_bound = -2**num_of_qubits_test-2
     max_bound = 2**num_of_qubits_test+2
-    
+
     cls_max_val = min_bound
     cls_min_val = max_bound
 
-    #TODO invalid state handling ?
+    # TODO invalid state handling ?
     for x in vqs_res:
         val = x[0]
-        if(val<cls_min_val):
-            cls_min_val=val
-        if(val>cls_max_val):
-            cls_max_val=val
-    if cls_max_val==min_bound:
-        cls_max_val=None
-    if cls_min_val==max_bound:
-        cls_min_val=None
-        
-    return {'min':cls_min_val,'max':cls_max_val}
+        if(val < cls_min_val):
+            cls_min_val = val
+        if(val > cls_max_val):
+            cls_max_val = val
+    if cls_max_val == min_bound:
+        cls_max_val = None
+    if cls_min_val == max_bound:
+        cls_min_val = None
+
+    return {'min': cls_min_val, 'max': cls_max_val}
 
 
 # In[ ]:
@@ -276,29 +280,31 @@ def classical_vqs_result_optimal_finder(vqs_res):
 # Binary Search
 
 size = 2**(num_qubits-num_overflow_bit-1)+1
-i_max=0
-i_min=0
+i_max = 0
+i_min = 0
 
 i_max_previous = i_max
-while k_binary_global_search_max==None:
-    exp_val = global_search(-i_max,k_helper,start_state,dev_global_search.wires)
+while k_binary_global_search_max == None:
+    exp_val = global_search(-i_max, k_helper, start_state,
+                            dev_global_search.wires)
     print(i_max)
     print(exp_val)
-    if(exp_val<threshold_max):
-        if(exp_val<threshold_max_backtrack):
+    if(exp_val < threshold_max):
+        if(exp_val < threshold_max_backtrack):
             k_binary_global_search_max = -i_max_previous
         else:
             k_binary_global_search_max = -i_max
     else:
         i_max_previous = i_max
         i_max += int((size-i_max)/2)+1
-print("k_binary_global_search_max: ",k_binary_global_search_max)
+print("k_binary_global_search_max: ", k_binary_global_search_max)
 print('done')
-i_min_previous = i_min            
-while k_binary_global_search_min==None:
-    exp_val = global_search(i_min,k_helper,start_state,dev_global_search.wires) 
-    if(exp_val>threshold_min):
-        if(exp_val>threshold_min_backtrack):
+i_min_previous = i_min
+while k_binary_global_search_min == None:
+    exp_val = global_search(i_min, k_helper, start_state,
+                            dev_global_search.wires)
+    if(exp_val > threshold_min):
+        if(exp_val > threshold_min_backtrack):
             k_binary_global_search_min = i_min_previous
         else:
             k_binary_global_search_min = i_min
@@ -306,7 +312,7 @@ while k_binary_global_search_min==None:
         i_min_previous = i_min
         i_min += int((size-i_min)/2)+1
 
-print("k_binary_global_search_min: ",k_binary_global_search_min)
+print("k_binary_global_search_min: ", k_binary_global_search_min)
 print('done')
 
 
@@ -318,18 +324,10 @@ print('done')
 # !pip install pennylane-lightning
 # !pip install pennylane-lightning[gpu]  # has erro
 
-import numpy as np
-from pennylane.optimize import AdamOptimizer
-from pennylane import numpy as qml_np
-import pennylane as qml
-
-import math
-import matplotlib.pyplot as plt
-import datetime
 
 # print(k_helper)
 # print(k_full_global_search_min)
-#VQS + full search
+# VQS + full search
 shift_max = k_helper+k_binary_global_search_max
 
 # global_shift_min = 0
@@ -381,17 +379,16 @@ device_name2 = 'default.qubit'  # has qml.state()
 def oracle_builder_for_HT_HTZ():
     qml.QubitStateVector(np.array(start_state), wires=range(
         1+num_overflow_bit, num_qubit_vqs))
-    
+
     # add some bits for handle overflow
     for w in reversed(range(2, num_overflow_bit+2)):
         qml.CNOT([w, w-1])
     add_k_sign(shift_max, wires=range(1, num_qubit_vqs))
 
-    
 
 def oracle_builder_for_no_HT_HTZ():
     qml.QubitStateVector(np.array(start_state), wires=range(
-       num_overflow_bit, num_qubit_vqs-1))
+        num_overflow_bit, num_qubit_vqs-1))
     # add some bits for handle overflow
     for w in reversed(range(1, num_overflow_bit+1)):
         qml.CNOT([w, w-1])
@@ -403,7 +400,6 @@ def layer_t3_no_HT(theta, qubit_posi):
     # length of theta: (num_qubit_vqs-1)*2
     # length of qubit_posi: num_qubit_vqs-1
     # number of wires: num_qubit_vqs
-    
 
     for i in range(num_qubit_vqs-1):
         qml.RY(theta[i], wires=(qubit_posi[i]))
@@ -423,9 +419,7 @@ def layer_t3_with_HT(theta, num_qubit_vqs):
     # type-2 layer
     # length of theta: (num_qubit_vqs-1)*2
     # number of wires: num_qubit_vqs
-    
-    
-    
+
     for i in range(num_qubit_vqs-1):
         qml.CRY(theta[i], wires=(0, i+1))
     for i in np.arange(0, num_qubit_vqs-2, 2):
@@ -441,9 +435,8 @@ def layer_t3_with_HT(theta, num_qubit_vqs):
     qml.Toffoli(wires=(0, num_qubit_vqs-1, 1))  # CCNOT struct3
 
 
-
 # dev_with_HT=qml.device(device_name2, wires=num_qubit_vqs+1) #AerDevice(wires=num_qubit_vqs, shots=20000, backend='qasm_simulator')
-dev_with_HT = qml.device(device_name, wires=num_qubit_vqs,shots=n_shots)
+dev_with_HT = qml.device(device_name, wires=num_qubit_vqs, shots=n_shots)
 
 
 @qml.qnode(dev_with_HT)
@@ -451,17 +444,17 @@ def quantum_circuit_with_HT(theta):
     # initiate state vector |phi_1>
     # qml.QubitStateVector(np.array(initial_state_0_phi1),
     #                      wires=range(num_qubit_vqs))
-#     qubit_position = list(range(1,num_qubit_vqs))
-#     initiate_state_0_phi1(qml, qubit_position, work_wires=num_qubit_vqs)
+    #     qubit_position = list(range(1,num_qubit_vqs))
+    #     initiate_state_0_phi1(qml, qubit_position, work_wires=num_qubit_vqs)
 
     oracle_builder_for_HT_HTZ()
-    qml.PauliX(wires=1) #MAX
-    
+    qml.PauliX(wires=1)  # MAX
+
     qml.Hadamard(0)
     for theta_i in theta:
         layer_t3_with_HT(theta_i, num_qubit_vqs)
     qml.Hadamard(0)
-    
+
     return qml.expval(qml.PauliZ(0))
 
 
@@ -472,7 +465,7 @@ if(print_circuit_flag):
 
 
 # dev_with_HTZ=qml.device(device_name2, wires=num_qubit_vqs+1) #AerDevice(wires=num_qubit_vqs, shots=20000, backend='qasm_simulator')
-dev_with_HTZ = qml.device(device_name, wires=num_qubit_vqs,shots=n_shots)
+dev_with_HTZ = qml.device(device_name, wires=num_qubit_vqs, shots=n_shots)
 
 
 @qml.qnode(dev_with_HTZ)
@@ -480,18 +473,18 @@ def quantum_circuit_with_HTZ(theta):
     # initiate state vector |phi_1>
     # qml.QubitStateVector(np.array(initial_state_0_phi1),
     #                      wires=range(num_qubit_vqs))
-#     qubit_position = list(range(1,num_qubit_vqs))
-#     initiate_state_0_phi1(qml, qubit_position, work_wires=num_qubit_vqs)
+    #     qubit_position = list(range(1,num_qubit_vqs))
+    #     initiate_state_0_phi1(qml, qubit_position, work_wires=num_qubit_vqs)
 
     oracle_builder_for_HT_HTZ()
-    qml.PauliX(wires=1) #MAX
+    qml.PauliX(wires=1)  # MAX
 
     qml.Hadamard(0)
     for theta_i in theta:
         layer_t3_with_HT(theta_i, num_qubit_vqs)
     qml.CZ([0, 1])
     qml.Hadamard(0)
-    
+
     return qml.expval(qml.PauliZ(0))
 
 
@@ -503,7 +496,7 @@ if(print_circuit_flag):
 
 
 # dev_no_HT_Z=qml.device(device_name2, wires=num_qubit_vqs+1) #AerDevice(wires=num_qubit_vqs-1, shots=20000, backend='qasm_simulator')
-dev_no_HT_Z = qml.device(device_name, wires=num_qubit_vqs-1,shots=n_shots)
+dev_no_HT_Z = qml.device(device_name, wires=num_qubit_vqs-1, shots=n_shots)
 
 
 @qml.qnode(dev_no_HT_Z)
@@ -511,28 +504,29 @@ def quantum_circuit_no_HT_return_Z(theta):
     # initiate state vector |phi_1>
     # qml.QubitStateVector(np.array(initial_state_phi1),
     #                      wires=range(num_qubit_vqs-1))
-#     qubit_position = list(range(num_qubit_vqs-1))
-#     initiate_state_0_phi1(qml, qubit_position, work_wires=num_qubit_vqs-1)
+    #     qubit_position = list(range(num_qubit_vqs-1))
+    #     initiate_state_0_phi1(qml, qubit_position, work_wires=num_qubit_vqs-1)
 
     oracle_builder_for_no_HT_HTZ()
-    qml.PauliX(wires=0) #MAX
+    qml.PauliX(wires=0)  # MAX
 
     for theta_i in theta:
         layer_t3_no_HT(theta_i, list(range(num_qubit_vqs-1)))
-    
-    qml.PauliX(wires=0) #MAX
+
+    qml.PauliX(wires=0)  # MAX
 
     return qml.expval(qml.PauliZ(0))
 
     # return qml.sample(qml.PauliZ(0))
 if(print_circuit_flag):
     print('newly added 2')
-    print(qml.draw(quantum_circuit_no_HT_return_Z)([[0.2]*2*(num_qubit_vqs-1)]))
+    print(qml.draw(quantum_circuit_no_HT_return_Z)
+          ([[0.2]*2*(num_qubit_vqs-1)]))
 # print(quantum_circuit_with_HT([[0.2]*(num_qubit_vqs-1)]))
 
 
 # dev_no_HT_S=qml.device(device_name2, wires=num_qubit_vqs+1) #AerDevice(wires=num_qubit_vqs-1, backend='qasm_simulator')
-dev_no_HT_S = qml.device(device_name2, wires=num_qubit_vqs-1,shots=n_shots)
+dev_no_HT_S = qml.device(device_name2, wires=num_qubit_vqs-1, shots=n_shots)
 
 
 @qml.qnode(dev_no_HT_S)
@@ -540,16 +534,16 @@ def quantum_circuit_no_HT_return_state(theta):
     # initiate state vector |phi_1>
     # qml.QubitStateVector(np.array(initial_state_phi1),
     #                      wires=range(num_qubit_vqs-1))
-#     qubit_position = list(range(num_qubit_vqs-1))
-#     initiate_state_0_phi1(qml, qubit_position, work_wires=num_qubit_vqs-1)
+    #     qubit_position = list(range(num_qubit_vqs-1))
+    #     initiate_state_0_phi1(qml, qubit_position, work_wires=num_qubit_vqs-1)
 
     oracle_builder_for_no_HT_HTZ()
-    qml.PauliX(wires=0) #MAX
-    
+    qml.PauliX(wires=0)  # MAX
+
     for theta_i in theta:
         layer_t3_no_HT(theta_i, list(range(num_qubit_vqs-1)))
-    qml.PauliX(wires=0) #MAX    
-        
+    qml.PauliX(wires=0)  # MAX
+
     return qml.state()
 
 
@@ -572,7 +566,7 @@ def objective_fn(theta):
     obj = -0.5*(val1_1 - val1_2)
     val_global.append(
         [val1_1._value.tolist(), val1_2._value.tolist(), obj._value.tolist()])
-    
+
     return obj
 
 
@@ -668,11 +662,13 @@ for rep in range(1, max_repeat+1):
 
     for i in range(len(prb)):
         if(np.linalg.norm(prb[i]) > vqs_find_sucess):
-            #TODO refactor
-            bin_rep_x = np.binary_repr(i, num_qubit_vqs-1) 
-            if(bin_rep_x[0]=='0' and bin_rep_x[0]==bin_rep_x[num_overflow_bit]):    #TODO: why not same overflow bit with sign bit sometimes
-                index_sign_decimal = int(bin_rep_x,2) #TODO refactor
-                vqs_results_max.append((index_sign_decimal,np.binary_repr(i, num_qubit_vqs-1), np.linalg.norm(prb[i])))
+            # TODO refactor
+            bin_rep_x = np.binary_repr(i, num_qubit_vqs-1)
+            # TODO: why not same overflow bit with sign bit sometimes
+            if(bin_rep_x[0] == '0' and bin_rep_x[0] == bin_rep_x[num_overflow_bit]):
+                index_sign_decimal = int(bin_rep_x, 2)  # TODO refactor
+                vqs_results_max.append((index_sign_decimal, np.binary_repr(
+                    i, num_qubit_vqs-1), np.linalg.norm(prb[i])))
 
 # print('theta_list=', theta_list)6
 # print('iter_terminate_list=', iter_terminate_list)
@@ -693,18 +689,10 @@ print(vqs_results_max)
 # !pip install pennylane-lightning
 # !pip install pennylane-lightning[gpu]  # has erro
 
-import numpy as np
-from pennylane.optimize import AdamOptimizer
-from pennylane import numpy as qml_np
-import pennylane as qml
-
-import math
-import matplotlib.pyplot as plt
-import datetime
 
 # print(k_helper)
 # print(k_full_global_search_min)
-#VQS + full search
+# VQS + full search
 shift_min = k_helper+k_binary_global_search_min
 
 # global_shift_min = 0
@@ -756,20 +744,21 @@ device_name2 = 'default.qubit'  # has qml.state()
 def oracle_builder_for_HT_HTZ():
     qml.QubitStateVector(np.array(start_state), wires=range(
         1+num_overflow_bit, num_qubit_vqs))
-    
+
     # add some bits for handle overflow
     for w in reversed(range(2, num_overflow_bit+2)):
         qml.CNOT([w, w-1])
     add_k_sign(shift_min, wires=range(1, num_qubit_vqs))
 
+
 def oracle_builder_for_no_HT_HTZ():
     qml.QubitStateVector(np.array(start_state), wires=range(
-       num_overflow_bit, num_qubit_vqs-1))
+        num_overflow_bit, num_qubit_vqs-1))
     # add some bits for handle overflow
     for w in reversed(range(1, num_overflow_bit+1)):
         qml.CNOT([w, w-1])
     add_k_sign(shift_min, wires=range(0, num_qubit_vqs-1))
-    
+
 
 def layer_t3_no_HT(theta, qubit_posi):
     # type-2 layer
@@ -809,11 +798,8 @@ def layer_t3_with_HT(theta, num_qubit_vqs):
     qml.Toffoli(wires=(0, num_qubit_vqs-1, 1))  # CCNOT struct3
 
 
-
-
-
 # dev_with_HT=qml.device(device_name2, wires=num_qubit_vqs+1) #AerDevice(wires=num_qubit_vqs, shots=20000, backend='qasm_simulator')
-dev_with_HT = qml.device(device_name, wires=num_qubit_vqs,shots=n_shots)
+dev_with_HT = qml.device(device_name, wires=num_qubit_vqs, shots=n_shots)
 
 
 @qml.qnode(dev_with_HT)
@@ -821,17 +807,16 @@ def quantum_circuit_with_HT(theta):
     # initiate state vector |phi_1>
     # qml.QubitStateVector(np.array(initial_state_0_phi1),
     #                      wires=range(num_qubit_vqs))
-#     qubit_position = list(range(1,num_qubit_vqs))
-#     initiate_state_0_phi1(qml, qubit_position, work_wires=num_qubit_vqs)
+    #     qubit_position = list(range(1,num_qubit_vqs))
+    #     initiate_state_0_phi1(qml, qubit_position, work_wires=num_qubit_vqs)
 
     oracle_builder_for_HT_HTZ()
-    
-    
+
     qml.Hadamard(0)
     for theta_i in theta:
         layer_t3_with_HT(theta_i, num_qubit_vqs)
     qml.Hadamard(0)
-    
+
     return qml.expval(qml.PauliZ(0))
 
 
@@ -842,7 +827,7 @@ if(print_circuit_flag):
 
 
 # dev_with_HTZ=qml.device(device_name2, wires=num_qubit_vqs+1) #AerDevice(wires=num_qubit_vqs, shots=20000, backend='qasm_simulator')
-dev_with_HTZ = qml.device(device_name, wires=num_qubit_vqs,shots=n_shots)
+dev_with_HTZ = qml.device(device_name, wires=num_qubit_vqs, shots=n_shots)
 
 
 @qml.qnode(dev_with_HTZ)
@@ -850,8 +835,8 @@ def quantum_circuit_with_HTZ(theta):
     # initiate state vector |phi_1>
     # qml.QubitStateVector(np.array(initial_state_0_phi1),
     #                      wires=range(num_qubit_vqs))
-#     qubit_position = list(range(1,num_qubit_vqs))
-#     initiate_state_0_phi1(qml, qubit_position, work_wires=num_qubit_vqs)
+    #     qubit_position = list(range(1,num_qubit_vqs))
+    #     initiate_state_0_phi1(qml, qubit_position, work_wires=num_qubit_vqs)
 
     oracle_builder_for_HT_HTZ()
 
@@ -860,7 +845,7 @@ def quantum_circuit_with_HTZ(theta):
         layer_t3_with_HT(theta_i, num_qubit_vqs)
     qml.CZ([0, 1])
     qml.Hadamard(0)
-    
+
     return qml.expval(qml.PauliZ(0))
 
 
@@ -872,7 +857,7 @@ if(print_circuit_flag):
 
 
 # dev_no_HT_Z=qml.device(device_name2, wires=num_qubit_vqs+1) #AerDevice(wires=num_qubit_vqs-1, shots=20000, backend='qasm_simulator')
-dev_no_HT_Z = qml.device(device_name, wires=num_qubit_vqs-1,shots=n_shots)
+dev_no_HT_Z = qml.device(device_name, wires=num_qubit_vqs-1, shots=n_shots)
 
 
 @qml.qnode(dev_no_HT_Z)
@@ -880,8 +865,8 @@ def quantum_circuit_no_HT_return_Z(theta):
     # initiate state vector |phi_1>
     # qml.QubitStateVector(np.array(initial_state_phi1),
     #                      wires=range(num_qubit_vqs-1))
-#     qubit_position = list(range(num_qubit_vqs-1))
-#     initiate_state_0_phi1(qml, qubit_position, work_wires=num_qubit_vqs-1)
+    #     qubit_position = list(range(num_qubit_vqs-1))
+    #     initiate_state_0_phi1(qml, qubit_position, work_wires=num_qubit_vqs-1)
 
     oracle_builder_for_no_HT_HTZ()
 
@@ -893,12 +878,13 @@ def quantum_circuit_no_HT_return_Z(theta):
     # return qml.sample(qml.PauliZ(0))
 if(print_circuit_flag):
     print('newly added 2')
-    print(qml.draw(quantum_circuit_no_HT_return_Z)([[0.2]*2*(num_qubit_vqs-1)]))
+    print(qml.draw(quantum_circuit_no_HT_return_Z)
+          ([[0.2]*2*(num_qubit_vqs-1)]))
 # print(quantum_circuit_with_HT([[0.2]*(num_qubit_vqs-1)]))
 
 
 # dev_no_HT_S=qml.device(device_name2, wires=num_qubit_vqs+1) #AerDevice(wires=num_qubit_vqs-1, backend='qasm_simulator')
-dev_no_HT_S = qml.device(device_name2, wires=num_qubit_vqs-1,shots=n_shots)
+dev_no_HT_S = qml.device(device_name2, wires=num_qubit_vqs-1, shots=n_shots)
 
 
 @qml.qnode(dev_no_HT_S)
@@ -906,8 +892,8 @@ def quantum_circuit_no_HT_return_state(theta):
     # initiate state vector |phi_1>
     # qml.QubitStateVector(np.array(initial_state_phi1),
     #                      wires=range(num_qubit_vqs-1))
-#     qubit_position = list(range(num_qubit_vqs-1))
-#     initiate_state_0_phi1(qml, qubit_position, work_wires=num_qubit_vqs-1)
+    #     qubit_position = list(range(num_qubit_vqs-1))
+    #     initiate_state_0_phi1(qml, qubit_position, work_wires=num_qubit_vqs-1)
 
     oracle_builder_for_no_HT_HTZ()
 
@@ -935,7 +921,7 @@ def objective_fn(theta):
     obj = -0.5*(val1_1 - val1_2)
     val_global.append(
         [val1_1._value.tolist(), val1_2._value.tolist(), obj._value.tolist()])
-    
+
     return obj
 
 
@@ -1030,10 +1016,12 @@ for rep in range(1, max_repeat+1):
 
     for i in range(len(prb)):
         if(np.linalg.norm(prb[i]) > vqs_find_sucess):
-            bin_rep_x = np.binary_repr(i, num_qubit_vqs-1) 
-            if(bin_rep_x[0]=='1' and bin_rep_x[0]==bin_rep_x[num_overflow_bit]):    #TODO: why not same overflow bit with sign bit sometimes
-                index_sign_decimal = int(bin_rep_x,2)-(1<<num_qubits)
-                vqs_results_min.append((index_sign_decimal,np.binary_repr(i, num_qubit_vqs-1), np.linalg.norm(prb[i])))
+            bin_rep_x = np.binary_repr(i, num_qubit_vqs-1)
+            # TODO: why not same overflow bit with sign bit sometimes
+            if(bin_rep_x[0] == '1' and bin_rep_x[0] == bin_rep_x[num_overflow_bit]):
+                index_sign_decimal = int(bin_rep_x, 2)-(1 << num_qubits)
+                vqs_results_min.append((index_sign_decimal, np.binary_repr(
+                    i, num_qubit_vqs-1), np.linalg.norm(prb[i])))
 
 # print('theta_list=', theta_list)6
 # print('iter_terminate_list=', iter_terminate_list)
@@ -1049,10 +1037,12 @@ print(vqs_results_min)
 # In[ ]:
 
 
-vqs_res_min = classical_vqs_result_optimal_finder(vqs_res=vqs_results_min)['min']
-vqs_res_max = classical_vqs_result_optimal_finder(vqs_res=vqs_results_max)['max']
-print("vqs_res_min: ",vqs_res_min)
-print("vqs_res_max: ",vqs_res_max)
+vqs_res_min = classical_vqs_result_optimal_finder(
+    vqs_res=vqs_results_min)['min']
+vqs_res_max = classical_vqs_result_optimal_finder(
+    vqs_res=vqs_results_max)['max']
+print("vqs_res_min: ", vqs_res_min)
+print("vqs_res_max: ", vqs_res_max)
 print('=========================================')
 
 
@@ -1061,35 +1051,31 @@ if k_binary_global_search_max == None:
 if k_binary_global_search_min == None:
     print('Error in finding global min binary')
 
-    
-print('k_helper= ',k_helper)
-print('k_binary_global_search_max= ',k_binary_global_search_max)
-print('k_binary_global_search_min= ',k_binary_global_search_min)
+
+print('k_helper= ', k_helper)
+print('k_binary_global_search_max= ', k_binary_global_search_max)
+print('k_binary_global_search_min= ', k_binary_global_search_min)
 
 
-qbs_max_val=None
-qbs_min_val=None
+qbs_max_val = None
+qbs_min_val = None
 
 if(vqs_res_max):
     qbs_max_val = -(k_helper+k_binary_global_search_max) + vqs_res_max
 else:
     print('vqs does not find any remaining element for max finder')
-    
+
 if(vqs_res_min):
     qbs_min_val = -(k_helper+k_binary_global_search_min) + vqs_res_min
 else:
     print('vqs does not find any remaining element for min finder')
-    
-print('=========================================')
-print('Quantum Solution for Max= ',qbs_max_val)
-print('Quantum Solution for Min= ',qbs_min_val)
 
-print('Classical Solution for Max: ',cls_max_val)
-print('Classical Solution for Min: ',cls_min_val)
+print('=========================================')
+print('Quantum Solution for Max= ', qbs_max_val)
+print('Quantum Solution for Min= ', qbs_min_val)
+
+print('Classical Solution for Max: ', cls_max_val)
+print('Classical Solution for Min: ', cls_min_val)
 
 
 # In[ ]:
-
-
-
-
