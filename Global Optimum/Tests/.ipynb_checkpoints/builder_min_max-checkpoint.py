@@ -12,11 +12,6 @@ from pennylane.optimize import AdamOptimizer
 import sys
 
 
-
-seed = 5
-N_test = 5
-
-
 # In[2]:
 
 
@@ -86,7 +81,7 @@ n_shots=None
 # test_input = np.array(test_input)
 # test_input = test_input/np.linalg.norm(test_input)
 
-test_input = random_oracle_builder(num_qubits=N_test)
+test_input = random_oracle_builder(num_qubits=14)
 
 
 num_of_qubits_test = int(np.log2(len(test_input)))
@@ -98,22 +93,6 @@ num_qubits = num_of_qubits_test + num_overflow_bit
 # start_state = start_state/np.linalg.norm(start_state)
 start_state = test_input
 print(start_state)
-
-
-#print params
-print('seed ',seed)
-print('N_test ',N_test)
-print('num_overflow_bit ',num_overflow_bit)
-print('threshold_helper_u ',threshold_helper_u)
-print('threshold_helper_l ',threshold_helper_l)
-print('device_name_standard_maker ',device_name_standard_maker)
-print('device_global_search',device_global_search)
-print('threshold_max ',threshold_max)
-print('threshold_min ',threshold_min)
-print('threshold_min_backtrack ',threshold_min_backtrack)
-print('threshold_max_backtrack ',threshold_max_backtrack)
-print('vqs_find_sucess ',vqs_find_sucess)
-
 
 
 # In[5]:
