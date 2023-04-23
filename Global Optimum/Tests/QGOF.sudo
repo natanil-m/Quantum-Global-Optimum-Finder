@@ -1,0 +1,20 @@
+k = None
+max_func_val = maximum value of the function range in domain D=[-2**(num_qubits-num_overflow_bit-1),+2**(num_qubits-num_overflow_bit-1)]
+shift_step=0
+max_iteration = 2*math.log(max_func_val) # 2* ? for seed=40 max_iteration+2 works
+iteration = 0
+while k == None and iteration <= max_iteration+1:
+    exp_val = measure the expectation value of observable Z the for Most Significant Qubit
+    if(exp_val>standardizer_threshold_lowerbound and exp_val<threshold_helper_upperbound):
+        k = shift_step
+    else:
+        if(exp_val>0):
+             shift_step -= int((max_func_val-abs(shift_step))/2)-1
+        else:
+            shift_step += int((max_func_val-abs(shift_step))/2)+1
+    iteration+=1
+k_helper = k
+if(k_helper==None):
+    F(x) is near constant. Measure it to find the global optimum.
+else:
+    Go to the next step of the algorithm
