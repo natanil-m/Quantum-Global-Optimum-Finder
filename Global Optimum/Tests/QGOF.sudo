@@ -1,20 +1,20 @@
-k = None
-max_func_val = maximum value of the function range in domain D=[-2**(num_qubits-num_overflow_bit-1),+2**(num_qubits-num_overflow_bit-1)]
-shift_step=0
-max_iteration = 2*math.log(max_func_val) # 2* ? for seed=40 max_iteration+2 works
+k = Null
+max_func_val = absolute of maximum value of the function range (upperbound=2**(num_qubits-num_overflow_bit-1))
+shift_step = 0  
+max_iteration = ceil(log2(max_func_val)) # since we use binary search method maximum number of steps is log2(max_func_val)
 iteration = 0
-while k == None and iteration <= max_iteration+1:
-    exp_val = measure the expectation value of observable Z the for Most Significant Qubit
-    if(exp_val>standardizer_threshold_lowerbound and exp_val<threshold_helper_upperbound):
+while k == Null and iteration <= max_iteration+1:
+    exp_val = <Z>(MSQb(standardizer_circuit)) ///measure the expectation value of observable Z the for Most Significant Qubit of standardizer circuit
+    if standardizer_threshold_lowerbound<exp_val<threshold_helper_upperbound:   //termination condition of binary search
         k = shift_step
     else:
-        if(exp_val>0):
-             shift_step -= int((max_func_val-abs(shift_step))/2)-1
-        else:
-            shift_step += int((max_func_val-abs(shift_step))/2)+1
+        if (exp_val>0):  //function has more positive values so we need to shift downward
+             shift_step -= int((max_func_val-abs(shift_step))/2)-1 //update parameter of binary serach
+        else if (exp_val<0):  //function has more negative value
+            shift_step += int((max_func_val-abs(shift_step))/2)+1 //update parameter of binary search
     iteration+=1
-k_helper = k
-if(k_helper==None):
+
+if(k is Null):  //if we can not find a proper k we can determine that exp_val is fluctuating between some constant values out of the threshold range, so we just need to measure the oracle to find out those values and they are global optimum 
     F(x) is near constant. Measure it to find the global optimum.
 else:
     Go to the next step of the algorithm
