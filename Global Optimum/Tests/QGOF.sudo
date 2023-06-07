@@ -1,20 +1,106 @@
 k = Null
-max_func_val = absolute of maximum value of the function range (upperbound=2**(num_qubits-num_overflow_bit-1))
+max_func_val = //Absolute value of the maximum value in the function(f) range, with an upper bound of 2^(num_qubits - num_overflow_bit - 1)
 shift_step = 0  
-max_iteration = ceil(log2(max_func_val)) # since we use binary search method maximum number of steps is log2(max_func_val)
+max_iteration = ceil(log2(max_func_val)) //Since we use a binary search method, the maximum number of steps required is log2(max_func_val)
 iteration = 0
 while k == Null and iteration <= max_iteration+1:
-    exp_val = <Z>(MSQb(standardizer_circuit)) ///measure the expectation value of observable Z the for Most Significant Qubit of standardizer circuit
-    if standardizer_threshold_lowerbound<exp_val<threshold_helper_upperbound:   //termination condition of binary search
+    exp_val = <Z>(MSQb(standardizer_circuit)) //Measure the expectation value of observable Z for the Most Significant Qubit of the standardizer circuit
+    if standardizer_threshold_lowerbound<exp_val<threshold_helper_upperbound:   //Termination condition of the binary search
         k = shift_step
     else:
-        if (exp_val>0):  //function has more positive values so we need to shift downward
-             shift_step -= int((max_func_val-abs(shift_step))/2)-1 //update parameter of binary serach
+        if (exp_val>0):  //The function has more positive values, so we need to shift downward
+             shift_step -= int((max_func_val-abs(shift_step))/2)-1 //Update the parameter of the binary search
         else if (exp_val<0):  //function has more negative value
-            shift_step += int((max_func_val-abs(shift_step))/2)+1 //update parameter of binary search
+            shift_step += int((max_func_val-abs(shift_step))/2)+1 //Update the parameter of the binary search
     iteration+=1
 
 if(k is Null):  //if we can not find a proper k we can determine that exp_val is fluctuating between some constant values out of the threshold range, so we just need to measure the oracle to find out those values and they are global optimum 
     F(x) is near constant. Measure it to find the global optimum.
 else:
     Go to the next step of the algorithm
+
+
+
+
+Set k = NULL
+Set max_func_val = 2^(num_qubits - num_overflow_bit - 1) - 1
+Set shift_step = 0
+Set max_iteration = ceil(log2(max_func_val)) + 1
+Set iteration = 0
+
+while k == NULL and iteration < max_iteration:
+    Set exp_val = measure_expectation_value(Z, MSQb(standardizer_circuit))
+    if standardizer_threshold_lowerbound < exp_val < threshold_helper_upperbound:
+        Set k = shift_step
+    else if exp_val > 0:
+        Set shift_step = shift_step - (max_func_val - abs(shift_step)) / 2
+    else if exp_val < 0:
+        Set shift_step = shift_step + (max_func_val - abs(shift_step)) / 2
+    Increment iteration by 1
+
+if k == NULL:
+    Set global_optimum = measure_global_optimum(oracle)
+else:
+    continue_algorithm(k)
+
+
+
+
+
+size = 2**(num_qubits-num_overflow_bit)+1
+max_iteration = math.log(size,2)+1
+i_min=0
+i_min_previous = 0
+iteration = 0 
+t=None           
+while (t==None and iteration<max_iteration):
+    exp_val = measure_expectation_value(Z, MSQb(standard_circuit))
+    if(exp_val>threshold_min):
+        if(exp_val>threshold_min_backtrack):
+            size = i_min
+            i_min = i_min_previous+int((size-i_min)/2)+1
+        else:
+            t = i_min
+    else:
+        i_min_previous = i_min
+        i_min += int((size-i_min)/2)+1
+    iteration += 1 
+if(t==None):
+    t = i_min_previous
+
+
+\begin{algorithm}[h]
+\SetKwInOut{KFinder}{KFinder}
+\KFinder{}
+\Begin{
+$k \leftarrow NULL $\;
+$ shift\_step \leftarrow 0$\;
+$iteration \leftarrow 0$\;
+$ max\_abs\_func\_val \leftarrow 2^{num\_qubits - num\_overflow\_bit - 1} + 1$\;
+$ max\_iteration \leftarrow \lceil \log_2(max\_func\_val) \rceil + 1$\;
+
+    \While{$k = \text{NULL}$ and $\text{iteration} < \text{max\_iteration}$}{
+        $\text{exp\_val} \leftarrow \text{measure\_expectation\_value}(Z, \text{MSQb}(standardizer\_circuit))$\;
+        \uIf{$\text{standardizer\_threshold\_lowerbound} < \text{exp\_val} < \text{standardizer\_threshold\_lowerbound}$}{
+            $k \leftarrow \text{shift\_step}$\;
+        }
+        \uElseIf{$\text{exp\_val} > 0$}{
+            $\text{shift\_step} \leftarrow \text{shift\_step} - (\text{max\_abs\_func\_val} - \left| \text{shift\_step} \right|) / 2$\;
+        }
+        \uElseIf{$\text{exp\_val} < 0$}{
+            $\text{shift\_step} \leftarrow \text{shift\_step} + (\text{max\_abs\_func\_val} - \left| \text{shift\_step} \right|) / 2$\;
+        }
+        Increment $\text{iteration}$ by 1\;
+    }
+    \eIf{$\text{k} = \text{NULL}$}{
+        Measure the Oracle F multiple times\;
+        $global\_maximum \leftarrow maximum\_measured\_value$\;
+        $global\_minimum \leftarrow minimum\_measured\_value$\;
+    }
+    {
+      Pass $k$ as a parameter to the algorithm that finds the proper shift $t$\;
+    }
+}
+\caption{Pseudocode for finding the proper shift value $k$ to standardize $f(x)$.}
+\label{alg:KFinder_min}
+\end{algorithm}
