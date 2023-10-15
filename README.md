@@ -24,8 +24,8 @@ This project is released under the MIT License, allowing you to use, modify, and
 
 ## Authors
 
-- Mohammadreza Soltaninia
-- Junpeng Zhan
+- Mohammadreza Soltaninia (ms69@alfred.edu)
+- Junpeng Zhan (zhanj@alfred.edu)
 
 ## Acknowledgments
 
