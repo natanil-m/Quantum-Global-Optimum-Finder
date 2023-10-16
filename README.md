@@ -10,7 +10,7 @@ Optimizing complex functions with multiple local minima is a challenging problem
 
 ## High-Level Description
 
-QGMF is an iterative quantum algorithm that shifts a function along the y-axis to efficiently search for the global minimum. It employs variational quantum search (VQS) to count negative values and determine the global minimum. The paper provides a detailed explanation of the algorithm.
+QGMF is an iterative quantum algorithm that shifts a function along the y-axis to efficiently search for the global minimum. It employs variational quantum search (VQS) to count negative values and determine the global minimum. The paper (not finished yet) provides a detailed explanation of the algorithm.
 
 ## Usage
 
