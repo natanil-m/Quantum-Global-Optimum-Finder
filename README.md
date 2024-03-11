@@ -16,7 +16,7 @@ QGMF is an iterative quantum algorithm that shifts a function along the y-axis t
 
 You can access the code and resources in this repository to implement and run the QGMF algorithm on a quantum computing platform. 
 
-![res](https://github.com/natanil-m/Quantum-Global-Optimum-Finder/blob/main/Global%20Optimum/Res/res2.png)
+![res](https://github.com/natanil-m/quantum_global_minimum_finder/blob/main/Global%20Optimum/supercomputer/Res/res3.png)
 
 ## License
 
