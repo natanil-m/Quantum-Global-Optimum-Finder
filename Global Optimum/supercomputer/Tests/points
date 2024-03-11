@@ -1,1 +1,0 @@
-in math.log(max_func_val) # 2* ? for seed=40 max_iteration+2 works => should change log to basis 2
