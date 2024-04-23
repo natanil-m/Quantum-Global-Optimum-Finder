@@ -1,0 +1,38 @@
+Running "module reset". Resetting modules to system default. The following $MODULEPATH directories have been removed: None
+
+Currently Loaded Modules:
+  1) gcc/11.4.0      4) cue-login-env/1.0   7) cudnn/8.9.0.131
+  2) openmpi/4.1.6   5) slurm-env/0.1       8) anaconda3_gpu/23.9.0
+  3) cuda/11.8.0     6) default-s11
+
+ 
+
+job is starting on gpuc02.delta.ncsa.illinois.edu
+GpuFreq=control_disabled
+Seed: 1710786545
+Classical G_m =  -2922
+num_qubits =  15
+num_qubits_vqs =  16
+n_layers: 2
+device name =  default.qubit
+run VQS with parameters: shift= 0  threshold= 1  n_layers= 2
+run VQS with parameters: shift= 2048  threshold= 1  n_layers= 2
+run VQS with parameters: shift= 3072  threshold= 1  n_layers= 2
+run VQS with parameters: shift= 2560  threshold= 1  n_layers= 2
+run VQS with parameters: shift= 2816  threshold= 1  n_layers= 2
+run VQS with parameters: shift= 2944  threshold= 1  n_layers= 2
+run VQS with parameters: shift= 2880  threshold= 1  n_layers= 2
+run VQS with parameters: shift= 2912  threshold= 1  n_layers= 2
+run VQS with parameters: shift= 2928  threshold= 1  n_layers= 2
+run VQS with parameters: shift= 2920  threshold= 1  n_layers= 2
+run VQS with parameters: shift= 2924  threshold= 1  n_layers= 2
+run VQS with parameters: shift= 2922  threshold= 1  n_layers= 2
+run VQS with parameters: shift= 2921  threshold= 1  n_layers= 2
+run VQS with parameters: shift= 2921  threshold= 1  n_layers= 2
+QG_m =  -2922
+steps:  15
+simulation time: 14934.705653s
+Peak memory usage: 33334.87 MiB
+GPU specific memory usage: 4 MiB
+done
+done

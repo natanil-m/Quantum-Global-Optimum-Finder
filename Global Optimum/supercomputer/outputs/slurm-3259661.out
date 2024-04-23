@@ -1,0 +1,31 @@
+Running "module reset". Resetting modules to system default. The following $MODULEPATH directories have been removed: None
+
+Currently Loaded Modules:
+  1) gcc/11.4.0      4) cue-login-env/1.0   7) cudnn/8.9.0.131
+  2) openmpi/4.1.6   5) slurm-env/0.1       8) anaconda3_gpu/23.9.0
+  3) cuda/11.8.0     6) default-s11
+
+ 
+
+job is starting on gpuc02.delta.ncsa.illinois.edu
+GpuFreq=control_disabled
+Seed: 1710764094
+Classical G_m =  22
+num_qubits =  9
+num_qubits_vqs =  10
+n_layers: 2
+device name =  default.qubit
+run VQS with parameters: shift= 0  threshold= 1  n_layers= 2
+run VQS with parameters: shift= -32  threshold= 1  n_layers= 2
+run VQS with parameters: shift= -16  threshold= 1  n_layers= 2
+run VQS with parameters: shift= -24  threshold= 1  n_layers= 2
+run VQS with parameters: shift= -20  threshold= 1  n_layers= 2
+run VQS with parameters: shift= -22  threshold= 1  n_layers= 2
+run VQS with parameters: shift= -23  threshold= 1  n_layers= 2
+QG_m =  22
+steps:  7
+simulation time: 96.571826s
+Peak memory usage: 30.29 MiB
+GPU specific memory usage: 4 MiB
+done
+done

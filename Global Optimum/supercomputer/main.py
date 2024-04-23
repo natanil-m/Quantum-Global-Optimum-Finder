@@ -15,11 +15,11 @@ import matplotlib.pyplot as plt
 import datetime
 
 #======================================
-seed=42
-# seed = int(time.time())
+#seed=42
+seed = int(time.time())
 np.random.seed(seed)
 print("Seed:", seed)
-num_qubits = 15
+num_qubits = int(sys.argv[1])
 n_layers = 2
 #===================================================
 import subprocess
@@ -100,19 +100,22 @@ def add_k_sign(k, wires):
     qml.adjoint(qml.QFT)(wires=wires)
 #===================================================
 
-
-
-#device_name = 'lightning.kokkos'  
-#device_name2 = 'lightning.kokkos'
-
-# device_name = 'lightning.qubit'  
-# device_name2 = 'lightning.qubit'  
-# device_name = 'lightning.qubit'  
-# device_name2 = 'lightning.qubit'  
-# device_name = 'lightning.gpu'  
-# device_name2 = 'lightning.gpu'  
 device_name = 'default.qubit' 
-device_name2 = 'default.qubit'  
+device_name2 = 'default.qubit'
+#device_name = 'lightning.gpu'  
+#device_name2 = 'lightning.gpu' 
+#if num_qubits>15:
+  # device_name = 'lightning.gpu'  
+   #device_name2 = 'lightning.gpu' 
+   #device_name = 'lightning.kokkos'  
+   #device_name2 = 'lightning.kokkos'
+
+#device_name = 'lightning.qubit'  
+#device_name2 = 'lightning.qubit'  
+# device_name = 'lightning.qubit'  
+# device_name2 = 'lightning.qubit'  
+ 
+  
 # device_name = 'qulacs.simulator' 
 # device_name2 = 'qulacs.simulator' 
 
@@ -333,7 +336,8 @@ def vqs(oracle_state,shift,threshold,n_layers,n_shots=None): #True, remainings
 
     # display the amplified state
     state = quantum_circuit_no_HT_return_state(theta)
-    prb = [i.item()**2 for i in state]
+    #prb = [i.item()**2 for i in state]
+    prb = state[-1].item()**2
     iter_terminate_list.append(iter_terminate)
 
 
@@ -344,8 +348,8 @@ def vqs(oracle_state,shift,threshold,n_layers,n_shots=None): #True, remainings
 
 
     # return True,remainings
-    return np.linalg.norm(prb[-1])
-                    
+    #return np.linalg.norm(prb[-1])
+    return np.linalg.norm(prb)      
 #===================================================
 start_time = datetime.datetime.now()
 
@@ -381,11 +385,15 @@ print('steps: ',counter_steps)
 end_time = datetime.datetime.now()
 duration = end_time - start_time
 duration_in_s = duration.total_seconds()
-print(f'time consumed: {duration_in_s}s')
-print('CPU Memory usage :',tracemalloc.get_traced_memory())
+print(f'simulation time: {duration_in_s}s')
+#print('CPU Memory usage :',tracemalloc.get_traced_memory())
+# Get the current and peak memory usage in bytes
+current_bytes, peak_bytes = tracemalloc.get_traced_memory()
+peak_mib = peak_bytes / (1024 * 1024)
+print(f"Peak memory usage: {peak_mib:.2f} MiB")
 tracemalloc.stop()
 gpu_memory_usage = get_gpu_memory_usage()
-print(f"GPU memory usage: {gpu_memory_usage} MiB")        
+print(f"GPU specific memory usage: {gpu_memory_usage} MiB")        
 print('done')
 
 
