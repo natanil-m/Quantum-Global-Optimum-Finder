@@ -31,6 +31,6 @@ This project is released under the MIT License, allowing you to use, modify, and
 
 The authors acknowledge the support of the National Science Foundation under Award ERI 2138702.
 
-For a comprehensive understanding of the QGMF algorithm, its components, and experimental results, please refer to the full paper.
+For a comprehensive understanding of the QGMF algorithm, its components, and experimental results, please refer to the published paper (available online soon).
 
 Thank you for your interest in QGMF!
